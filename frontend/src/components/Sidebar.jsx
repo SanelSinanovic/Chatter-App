@@ -9,14 +9,22 @@ const Sidebar = () => {
 
   const { onlineUsers } = useAuthStore();
   const [showOnlineOnly, setShowOnlineOnly] = useState(false);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     getUsers();
   }, [getUsers]);
 
-  const filteredUsers = showOnlineOnly
-    ? users.filter((user) => onlineUsers.includes(user._id))
-    : users;
+  const filteredUsers = users
+    .filter((user) => {
+      if (showOnlineOnly && !onlineUsers.includes(user._id)) return false;
+      if (!search) return true;
+      const q = search.toLowerCase();
+      return (
+        user.fullName?.toLowerCase().includes(q) ||
+        user.email?.toLowerCase().includes(q)
+      );
+    });
 
   if (isUsersLoading) return <SidebarSkeleton />;
 
@@ -27,7 +35,13 @@ const Sidebar = () => {
           <Users className="size-6" />
           <span className="font-medium hidden lg:block">Contacts</span>
         </div>
-        {/* TODO: Online filter toggle */}
+        <input
+          type="text"
+          placeholder="Search users..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="input input-bordered input-sm w-full mt-3 hidden lg:block"
+        />
         <div className="mt-3 hidden lg:flex items-center gap-2">
           <label className="cursor-pointer flex items-center gap-2">
             <input
@@ -78,7 +92,7 @@ const Sidebar = () => {
         ))}
 
         {filteredUsers.length === 0 && (
-          <div className="text-center text-zinc-500 py-4">No online users</div>
+          <div className="text-center text-zinc-500 py-4">No users found</div>
         )}
       </div>
     </aside>
